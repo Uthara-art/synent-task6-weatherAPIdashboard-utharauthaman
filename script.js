@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.getElementById('search-form');
     const cityInput = document.getElementById('city-input');
     const errorMessage = document.getElementById('error-message');
-    const loadingState = document.getElementById('loading-state');
     const weatherContent = document.getElementById('weather-content');
+    const suggestionsList = document.getElementById('search-suggestions');
     
     // Weather Elements
     const cityNameEl = document.getElementById('city-name');
@@ -19,6 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const rainContainer = document.getElementById('rain-container');
     const realisticCloud = document.getElementById('realistic-cloud');
     const bgEffectsContainer = document.getElementById('weather-background-effects');
+    
+    const highestCityEl = document.getElementById('highest-city');
+    const highestTempEl = document.getElementById('highest-temp');
+    const lowestCityEl = document.getElementById('lowest-city');
+    const lowestTempEl = document.getElementById('lowest-temp');
 
     // Theme logic removed - App is permanently dark mode
 
@@ -34,78 +39,188 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDate();
 
     // ==========================================
-    // Search & UI State Management
+    // Search & API Integration (Autocomplete)
     // ==========================================
     
-    searchForm.addEventListener('submit', (e) => {
+    let debounceTimer;
+
+    // Listen for user typing to show suggestions
+    cityInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        
+        clearTimeout(debounceTimer);
+        
+        if (query.length < 2) {
+            suggestionsList.classList.remove('show');
+            return;
+        }
+
+        // Debounce to avoid hitting the API on every single keystroke
+        debounceTimer = setTimeout(() => {
+            fetchSuggestions(query);
+        }, 300);
+    });
+
+    // Fetch city suggestions from the Geocoding API
+    async function fetchSuggestions(query) {
+        try {
+            const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+            const data = await response.json();
+
+            if (data.results && data.results.length > 0) {
+                renderSuggestions(data.results);
+            } else {
+                suggestionsList.classList.remove('show');
+            }
+        } catch (error) {
+            console.error('Error fetching suggestions:', error);
+        }
+    }
+
+    // Display the suggestions in the dropdown
+    function renderSuggestions(results) {
+        suggestionsList.innerHTML = ''; // Clear previous suggestions
+        
+        results.forEach(result => {
+            const li = document.createElement('li');
+            li.className = 'suggestion-item';
+            
+            // Container for icon and city name
+            const cityContainer = document.createElement('div');
+            cityContainer.className = 'suggestion-city-container';
+            
+            const pinIcon = document.createElement('i');
+            pinIcon.className = 'ph-fill ph-map-pin suggestion-icon';
+            
+            const cityName = document.createElement('span');
+            cityName.className = 'suggestion-city';
+            cityName.textContent = result.name;
+            
+            cityContainer.appendChild(pinIcon);
+            cityContainer.appendChild(cityName);
+            
+            const details = document.createElement('span');
+            details.className = 'suggestion-details';
+            
+            // Build the subtitle (e.g. "California, United States")
+            const parts = [];
+            if (result.admin1) parts.push(result.admin1);
+            if (result.country) parts.push(result.country);
+            details.textContent = parts.join(', ');
+
+            li.appendChild(cityContainer);
+            li.appendChild(details);
+
+            // Handle clicking on a suggestion
+            li.addEventListener('click', () => {
+                cityInput.value = result.name;
+                suggestionsList.classList.remove('show');
+                hideError();
+                fetchWeatherData(result.name); // Fetch weather immediately
+            });
+
+            suggestionsList.appendChild(li);
+        });
+
+        suggestionsList.classList.add('show');
+    }
+
+    // Hide suggestions if the user clicks outside the dropdown
+    document.addEventListener('click', (e) => {
+        if (!searchForm.contains(e.target) && !suggestionsList.contains(e.target)) {
+            suggestionsList.classList.remove('show');
+        }
+    });
+
+    // Handle manual form submission
+    searchForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const city = cityInput.value.trim();
         if (!city) return;
 
-        // Hide error if it was showing
+        // Hide any previous error message before starting the new search
         hideError();
         
-        // Show loading state
-        showLoading();
+        // Fetch real-time data from the API
+        await fetchWeatherData(city);
 
-        // Simulate an API call with setTimeout
-        // In a real app, you would fetch() data here
-        setTimeout(() => {
-            // Mock condition: If user types "error", show error state
-            if (city.toLowerCase() === 'error') {
+        cityInput.value = ''; // Clear the input field
+        cityInput.blur(); // Remove focus from the input
+    });
+
+    /**
+     * Fetches weather data from the Open-Meteo API using the Fetch API.
+     * The Fetch API allows us to make network requests asynchronously to external servers.
+     * We use `async/await` to pause execution until the server responds, avoiding nested callbacks.
+     */
+    async function fetchWeatherData(city) {
+        try {
+            // 1. Geocoding Request: Open-Meteo requires latitude and longitude.
+            // We use their Geocoding API to convert the user's city name into coordinates.
+            const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+            
+            // Parse the raw response into a JSON object
+            const geoData = await geoResponse.json();
+
+            // Check if the API returned any results for the city name
+            if (!geoData.results || geoData.results.length === 0) {
                 showError('City not found. Please try again.');
-                hideLoading();
                 return;
             }
 
-            // Mock Data Update
-            const weatherConditions = ['Sunny', 'Partly Cloudy', 'Rainy', 'Cloudy'];
-            const randomCondition = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+            // Extract the location details
+            const location = geoData.results[0];
+            const lat = location.latitude;
+            const lon = location.longitude;
+            const cityName = location.name; // The properly formatted city name from the API
+
+            // 2. Weather Request: Fetch the current weather using the obtained coordinates.
+            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code`);
             
+            // Parse the weather response into a JSON object
+            const weatherData = await weatherResponse.json();
+            const current = weatherData.current;
+
+            // Map the numerical weather code from the API to our UI string conditions
+            const conditionString = mapWeatherCodeToCondition(current.weather_code);
+
+            // Update the UI dynamically with the real data
             updateWeatherUI({
-                city: formatCityName(city),
-                temp: Math.floor(Math.random() * 20) + 10, // Random temp between 10-30
-                condition: randomCondition,
-                humidity: Math.floor(Math.random() * 40) + 40 + '%', // 40-80%
-                windSpeed: Math.floor(Math.random() * 20) + 5 + ' km/h'
+                city: cityName,
+                temp: Math.round(current.temperature_2m),
+                condition: conditionString,
+                humidity: current.relative_humidity_2m + '%',
+                windSpeed: current.wind_speed_10m + ' km/h'
             });
 
-            hideLoading();
-            cityInput.value = ''; // Clear input
-            cityInput.blur(); // Remove focus
-            
-        }, 1500); // 1.5s simulated delay
-    });
+        } catch (error) {
+            // Catch and handle any network errors (e.g. user is offline, API is down)
+            console.error('Error fetching weather data:', error);
+            showError('Failed to fetch weather data. Please try again.');
+        }
+    }
+
+    /**
+     * Helper function to map Open-Meteo's WMO weather codes to our visual conditions.
+     */
+    function mapWeatherCodeToCondition(code) {
+        if (code === 0) return 'Sunny';
+        if (code === 1 || code === 2 || code === 3) return 'Partly Cloudy';
+        if (code >= 51 && code <= 67) return 'Rainy'; // Drizzle and Rain
+        if (code >= 80 && code <= 82) return 'Rainy'; // Rain showers
+        if (code >= 95) return 'Rainy'; // Thunderstorms
+        return 'Cloudy'; // Fallback
+    }
 
     // Helpers
-    function showLoading() {
-        weatherContent.classList.add('hide');
-        loadingState.classList.add('show');
-    }
-
-    function hideLoading() {
-        loadingState.classList.remove('show');
-        weatherContent.classList.remove('hide');
-        // Small delay to allow CSS transitions to catch up if needed
-        setTimeout(() => {
-            weatherContent.style.opacity = '1';
-        }, 50);
-    }
-
     function showError(msg) {
         errorMessage.querySelector('span').textContent = msg;
         errorMessage.classList.add('show');
-        // Hide weather content if we want a pure error state, 
-        // but often it's better to keep the old data visible.
     }
 
     function hideError() {
         errorMessage.classList.remove('show');
-    }
-
-    function formatCityName(name) {
-        return name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
     }
 
     function updateWeatherUI(data) {
@@ -194,4 +309,60 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
+    // ==========================================
+    // Fetch Global Extremes on load
+    // ==========================================
+    async function fetchGlobalExtremes() {
+        // Pre-defined set of globally extreme cities to check
+        const globalCities = [
+            { name: 'Death Valley', lat: 36.46, lon: -116.86 },
+            { name: 'Khartoum', lat: 15.50, lon: 32.55 },
+            { name: 'Dubai', lat: 25.20, lon: 55.27 },
+            { name: 'Yakutsk', lat: 62.02, lon: 129.73 },
+            { name: 'Oymyakon', lat: 63.46, lon: 142.78 },
+            { name: 'Vostok Station', lat: -78.46, lon: 106.83 }
+        ];
+
+        try {
+            // Join all lats and lons to do a batch request
+            const lats = globalCities.map(c => c.lat).join(',');
+            const lons = globalCities.map(c => c.lon).join(',');
+            
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m`);
+            const data = await response.json();
+            
+            let maxTemp = -Infinity;
+            let minTemp = Infinity;
+            let hottestCity = '';
+            let coldestCity = '';
+
+            // data is an array since we requested multiple coordinates
+            data.forEach((loc, index) => {
+                const temp = loc.current.temperature_2m;
+                if (temp > maxTemp) {
+                    maxTemp = temp;
+                    hottestCity = globalCities[index].name;
+                }
+                if (temp < minTemp) {
+                    minTemp = temp;
+                    coldestCity = globalCities[index].name;
+                }
+            });
+
+            highestCityEl.textContent = hottestCity;
+            highestTempEl.textContent = `${Math.round(maxTemp)}°C`;
+            
+            lowestCityEl.textContent = coldestCity;
+            lowestTempEl.textContent = `${Math.round(minTemp)}°C`;
+
+        } catch (error) {
+            console.error('Failed to fetch global extremes:', error);
+            highestCityEl.textContent = 'Unavailable';
+            lowestCityEl.textContent = 'Unavailable';
+        }
+    }
+
+    // Initialize
+    fetchGlobalExtremes();
 });

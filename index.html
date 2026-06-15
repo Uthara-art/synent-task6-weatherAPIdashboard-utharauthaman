@@ -24,7 +24,7 @@
             </div>
         </header>
 
-        <section class="search-section">
+        <section class="search-section" style="position: relative;">
             <form id="search-form" class="search-bar">
                 <i class="ph ph-magnifying-glass search-icon"></i>
                 <input 
@@ -36,6 +36,7 @@
                 >
                 <button type="submit" class="search-btn">Search</button>
             </form>
+            <ul id="search-suggestions" class="suggestions-list"></ul>
             <div class="error-message" id="error-message">
                 <i class="ph ph-warning-circle"></i>
                 <span>City not found. Please try again.</span>
@@ -97,6 +98,30 @@
                             <p class="detail-label">Wind Speed</p>
                             <p class="detail-value" id="wind-speed">12 km/h</p>
                         </div>
+                    </div>
+                </div>
+
+                <div class="extremes-section">
+                    <div class="extreme-card">
+                        <div class="extreme-icon-wrapper hot">
+                            <i class="ph-fill ph-fire"></i>
+                        </div>
+                        <div class="extreme-info">
+                            <span class="extreme-label">Highest</span>
+                            <span class="extreme-city" id="highest-city">Loading...</span>
+                        </div>
+                        <span class="extreme-temp hot-temp" id="highest-temp">--°</span>
+                    </div>
+                    
+                    <div class="extreme-card">
+                        <div class="extreme-icon-wrapper cold">
+                            <i class="ph-fill ph-snowflake"></i>
+                        </div>
+                        <div class="extreme-info">
+                            <span class="extreme-label">Lowest</span>
+                            <span class="extreme-city" id="lowest-city">Loading...</span>
+                        </div>
+                        <span class="extreme-temp cold-temp" id="lowest-temp">--°</span>
                     </div>
                 </div>
             </div>

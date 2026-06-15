@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <meta name="description" content="A modern, responsive weather dashboard">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for modern, clean icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+    <div class="background-mesh"></div>
+    <div id="weather-background-effects" class="weather-background-effects"></div>
+    
+    <main class="app-container">
+        <header class="header">
+            <div class="logo">
+                <i class="ph-fill ph-cloud-sun"></i>
+                <h1>Weather</h1>
+            </div>
+        </header>
+
+        <section class="search-section">
+            <form id="search-form" class="search-bar">
+                <i class="ph ph-magnifying-glass search-icon"></i>
+                <input 
+                    type="text" 
+                    id="city-input" 
+                    placeholder="Search for a city..." 
+                    autocomplete="off"
+                    aria-label="City name"
+                >
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+            <div class="error-message" id="error-message">
+                <i class="ph ph-warning-circle"></i>
+                <span>City not found. Please try again.</span>
+            </div>
+        </section>
+
+        <section class="weather-card" id="weather-card">
+            <!-- Loading State -->
+            <div class="loading-state" id="loading-state">
+                <div class="spinner"></div>
+                <p>Fetching weather data...</p>
+            </div>
+
+            <!-- Weather Content -->
+            <div class="weather-content" id="weather-content">
+                <div class="location-header">
+                    <h2 id="city-name" class="city-name">San Francisco, CA</h2>
+                    <p id="date" class="current-date">Monday, 15 June</p>
+                </div>
+
+                <div class="main-weather">
+                    <div class="weather-icon-area">
+                        <div class="realistic-weather-container" id="weather-visual">
+                            <div class="realistic-sun" id="realistic-sun" style="opacity: 0;"></div>
+                            <div class="realistic-cloud" id="realistic-cloud"></div>
+                            <div class="rain-container show" id="rain-container">
+                                <div class="drop" style="--d: 0.1s; left: 15%"></div>
+                                <div class="drop" style="--d: 0.4s; left: 35%"></div>
+                                <div class="drop" style="--d: 0.2s; left: 50%"></div>
+                                <div class="drop" style="--d: 0.6s; left: 65%"></div>
+                                <div class="drop" style="--d: 0.3s; left: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="temperature-area">
+                        <div class="temp-display">
+                            <span id="temperature">18</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                        <p id="weather-condition" class="condition">Light Rain</p>
+                    </div>
+                </div>
+
+                <div class="weather-details">
+                    <div class="detail-card">
+                        <div class="detail-icon">
+                            <i class="ph ph-drop"></i>
+                        </div>
+                        <div class="detail-info">
+                            <p class="detail-label">Humidity</p>
+                            <p class="detail-value" id="humidity">84%</p>
+                        </div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="detail-icon">
+                            <i class="ph ph-wind"></i>
+                        </div>
+                        <div class="detail-info">
+                            <p class="detail-label">Wind Speed</p>
+                            <p class="detail-value" id="wind-speed">12 km/h</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

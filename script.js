@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.querySelector('.search-btn');
     const loadingState = document.getElementById('loading-state');
     const recentSearchesContainer = document.getElementById('recent-searches');
+    const forecastContainer = document.getElementById('forecast-container');
     
     // Weather Elements
     const cityNameEl = document.getElementById('city-name');
@@ -200,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const lon = location.longitude;
             const cityName = location.name;
 
-            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code`);
+            const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=weather_code,temperature_2m_max&timezone=auto`);
             
             if (!weatherResponse.ok) throw new Error('Failed to reach weather service');
 
@@ -219,6 +220,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Feature: Successful fetch - turn off loading and display the weather card
             hideLoading(true);
+            
+            // Render 5-Day Forecast
+            if (weatherData.daily) {
+                renderForecast(weatherData.daily);
+            }
             
             // Save to recent searches
             saveRecentSearch(cityName);
@@ -240,6 +246,46 @@ document.addEventListener('DOMContentLoaded', () => {
         if (code >= 80 && code <= 82) return 'Rainy'; // Rain showers
         if (code >= 95) return 'Rainy'; // Thunderstorms
         return 'Cloudy'; // Fallback
+    }
+
+    function mapWeatherCodeToIcon(code) {
+        if (code === 0) return 'ph-sun';
+        if (code === 1 || code === 2 || code === 3) return 'ph-cloud-sun';
+        if (code >= 51 && code <= 67) return 'ph-cloud-rain';
+        if (code >= 80 && code <= 82) return 'ph-cloud-showers-heavy';
+        if (code >= 95) return 'ph-cloud-lightning';
+        return 'ph-cloud';
+    }
+
+    function renderForecast(daily) {
+        if (!forecastContainer) return;
+        forecastContainer.innerHTML = '';
+
+        // We want the next 5 days, starting from tomorrow (index 1)
+        for (let i = 1; i <= 5; i++) {
+            if (!daily.time[i]) break;
+
+            const dateStr = daily.time[i];
+            const dateObj = new Date(dateStr);
+            // Use UTC to prevent timezone shifting the day name backward
+            const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+            
+            const tempMax = Math.round(daily.temperature_2m_max[i]);
+            const condition = mapWeatherCodeToCondition(daily.weather_code[i]);
+            const iconClass = mapWeatherCodeToIcon(daily.weather_code[i]);
+
+            const card = document.createElement('div');
+            card.className = 'forecast-card';
+            
+            card.innerHTML = `
+                <span class="forecast-day">${dayName}</span>
+                <i class="ph-fill ${iconClass} forecast-icon"></i>
+                <span class="forecast-temp">${tempMax}°</span>
+                <span class="forecast-condition">${condition}</span>
+            `;
+            
+            forecastContainer.appendChild(card);
+        }
     }
 
     // ==========================================

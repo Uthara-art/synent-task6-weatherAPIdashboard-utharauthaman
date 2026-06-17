@@ -173,7 +173,7 @@ body {
    ========================================= */
 .app-container {
     width: 100%;
-    max-width: 600px;
+    max-width: 850px;
     padding: 2rem;
     display: flex;
     flex-direction: column;
@@ -877,6 +877,83 @@ body {
 }
 
 /* =========================================
+   Forecast Section
+   ========================================= */
+.forecast-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.forecast-container {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+    justify-content: space-between;
+}
+
+.forecast-container::-webkit-scrollbar {
+    height: 6px;
+}
+.forecast-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.forecast-card {
+    flex: 1;
+    min-width: 80px;
+    background: var(--detail-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 1rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.forecast-card:hover {
+    transform: translateY(-2px);
+    background: var(--card-bg);
+}
+
+.forecast-day {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.forecast-icon {
+    font-size: 2rem;
+    color: var(--accent-color);
+}
+
+.forecast-temp {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.forecast-condition {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* =========================================
    Responsive Breakpoints
    ========================================= */
 
@@ -898,6 +975,10 @@ body {
     
     #temperature {
         font-size: clamp(5rem, 15vw, 7.5rem);
+    }
+
+    .forecast-container {
+        justify-content: flex-start;
     }
 }
 

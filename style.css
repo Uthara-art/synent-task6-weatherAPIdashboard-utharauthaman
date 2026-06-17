@@ -483,15 +483,18 @@ body {
 
 /* Weather Content */
 .weather-content {
-    display: flex; /* Flex by default */
-    flex-direction: column;
-    gap: 2rem;
-    opacity: 1;
     transition: opacity 0.3s ease;
 }
 
 .weather-content.hide {
     display: none;
+}
+
+.search-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--text-secondary);
+    transform: none;
 }
 
 .location-header {

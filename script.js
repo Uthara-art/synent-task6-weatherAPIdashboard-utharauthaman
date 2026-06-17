@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMessage = document.getElementById('error-message');
     const weatherContent = document.getElementById('weather-content');
     const suggestionsList = document.getElementById('search-suggestions');
+    const searchBtn = document.querySelector('.search-btn');
+    const loadingState = document.getElementById('loading-state');
     
     // Weather Elements
     const cityNameEl = document.getElementById('city-name');
@@ -59,6 +61,19 @@ document.addEventListener('DOMContentLoaded', () => {
         debounceTimer = setTimeout(() => {
             fetchSuggestions(query);
         }, 300);
+    });
+
+    searchForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const city = cityInput.value.trim();
+        if (!city) return;
+
+        hideError();
+        await fetchWeatherData(city);
+
+        cityInput.value = ''; // Clear the input field
+        cityInput.blur(); // Remove focus from the input
     });
 
     // Fetch city suggestions from the Geocoding API
@@ -154,38 +169,45 @@ document.addEventListener('DOMContentLoaded', () => {
      * The Fetch API allows us to make network requests asynchronously to external servers.
      * We use `async/await` to pause execution until the server responds, avoiding nested callbacks.
      */
+    // Fetch the actual weather data
     async function fetchWeatherData(city) {
+        // Feature: Check for internet connection before attempting fetch
+        if (!navigator.onLine) {
+            showError('No internet connection. Please check your network.');
+            return;
+        }
+
         try {
-            // 1. Geocoding Request: Open-Meteo requires latitude and longitude.
-            // We use their Geocoding API to convert the user's city name into coordinates.
+            // Activate loading state before starting the network request
+            showLoading();
+
             const geoResponse = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
             
-            // Parse the raw response into a JSON object
+            // Feature: Ensure API request was successful
+            if (!geoResponse.ok) throw new Error('Failed to reach geocoding service');
+
             const geoData = await geoResponse.json();
 
-            // Check if the API returned any results for the city name
             if (!geoData.results || geoData.results.length === 0) {
+                hideLoading(false); // Hide loading, but do not show weather content
                 showError('City not found. Please try again.');
                 return;
             }
 
-            // Extract the location details
             const location = geoData.results[0];
             const lat = location.latitude;
             const lon = location.longitude;
-            const cityName = location.name; // The properly formatted city name from the API
+            const cityName = location.name;
 
-            // 2. Weather Request: Fetch the current weather using the obtained coordinates.
             const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code`);
             
-            // Parse the weather response into a JSON object
+            if (!weatherResponse.ok) throw new Error('Failed to reach weather service');
+
             const weatherData = await weatherResponse.json();
             const current = weatherData.current;
 
-            // Map the numerical weather code from the API to our UI string conditions
             const conditionString = mapWeatherCodeToCondition(current.weather_code);
 
-            // Update the UI dynamically with the real data
             updateWeatherUI({
                 city: cityName,
                 temp: Math.round(current.temperature_2m),
@@ -194,9 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 windSpeed: current.wind_speed_10m + ' km/h'
             });
 
+            // Feature: Successful fetch - turn off loading and display the weather card
+            hideLoading(true);
+
         } catch (error) {
-            // Catch and handle any network errors (e.g. user is offline, API is down)
             console.error('Error fetching weather data:', error);
+            hideLoading(false);
             showError('Failed to fetch weather data. Please try again.');
         }
     }
@@ -213,10 +238,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'Cloudy'; // Fallback
     }
 
-    // Helpers
+    // ==========================================
+    // UI Helpers (Loading & Error States)
+    // ==========================================
+    
+    function showLoading() {
+        weatherContent.classList.add('hide');
+        errorMessage.classList.remove('show');
+        loadingState.classList.add('show');
+        searchBtn.disabled = true;
+        searchBtn.textContent = '...';
+    }
+
+    function hideLoading(success = false) {
+        loadingState.classList.remove('show');
+        searchBtn.disabled = false;
+        searchBtn.textContent = 'Search';
+        if (success) {
+            weatherContent.classList.remove('hide');
+        }
+    }
+
     function showError(msg) {
         errorMessage.querySelector('span').textContent = msg;
         errorMessage.classList.add('show');
+        weatherContent.classList.add('hide'); // Ensure previous weather is hidden on error
     }
 
     function hideError() {
@@ -362,6 +408,20 @@ document.addEventListener('DOMContentLoaded', () => {
             lowestCityEl.textContent = 'Unavailable';
         }
     }
+
+    // ==========================================
+    // Network Status Listeners
+    // ==========================================
+    window.addEventListener('offline', () => {
+        showError('You are currently offline. Please check your network connection.');
+    });
+
+    window.addEventListener('online', () => {
+        // If an offline error was shown, clear it when connection is restored
+        if (errorMessage.classList.contains('show') && errorMessage.innerText.includes('offline')) {
+            hideError();
+        }
+    });
 
     // Initialize
     fetchGlobalExtremes();

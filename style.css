@@ -351,6 +351,36 @@ body {
 }
 
 /* =========================================
+   Recent Searches
+   ========================================= */
+.recent-searches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.recent-search-item {
+    background: var(--detail-bg);
+    border: 1px solid var(--card-border);
+    padding: 0.35rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.recent-search-item:hover {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border-color: var(--accent-color);
+}
+
+/* =========================================
    Autocomplete Suggestions List
    ========================================= */
 .suggestions-list {

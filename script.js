@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const suggestionsList = document.getElementById('search-suggestions');
     const searchBtn = document.querySelector('.search-btn');
     const loadingState = document.getElementById('loading-state');
+    const recentSearchesContainer = document.getElementById('recent-searches');
     
     // Weather Elements
     const cityNameEl = document.getElementById('city-name');
@@ -218,6 +219,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Feature: Successful fetch - turn off loading and display the weather card
             hideLoading(true);
+            
+            // Save to recent searches
+            saveRecentSearch(cityName);
 
         } catch (error) {
             console.error('Error fetching weather data:', error);
@@ -423,6 +427,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // ==========================================
+    // Recent Searches (localStorage)
+    // ==========================================
+    const MAX_RECENT_SEARCHES = 5;
+
+    function getRecentSearches() {
+        const searches = localStorage.getItem('recentSearches');
+        return searches ? JSON.parse(searches) : [];
+    }
+
+    function saveRecentSearch(city) {
+        let searches = getRecentSearches();
+        
+        // Remove duplicate if exists
+        searches = searches.filter(s => s.toLowerCase() !== city.toLowerCase());
+        
+        // Add to beginning
+        searches.unshift(city);
+        
+        // Limit to MAX_RECENT_SEARCHES
+        if (searches.length > MAX_RECENT_SEARCHES) {
+            searches.pop();
+        }
+        
+        localStorage.setItem('recentSearches', JSON.stringify(searches));
+        renderRecentSearches();
+    }
+
+    function renderRecentSearches() {
+        if (!recentSearchesContainer) return;
+        
+        const searches = getRecentSearches();
+        recentSearchesContainer.innerHTML = '';
+        
+        if (searches.length > 0) {
+            searches.forEach(city => {
+                const span = document.createElement('span');
+                span.className = 'recent-search-item';
+                span.innerHTML = `<i class="ph ph-clock-counter-clockwise"></i> ${city}`;
+                span.addEventListener('click', () => {
+                    cityInput.value = city;
+                    suggestionsList.classList.remove('show');
+                    hideError();
+                    fetchWeatherData(city);
+                });
+                recentSearchesContainer.appendChild(span);
+            });
+        }
+    }
+
     // Initialize
+    renderRecentSearches();
     fetchGlobalExtremes();
 });

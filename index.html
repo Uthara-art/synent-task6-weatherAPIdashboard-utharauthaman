@@ -1,39 +1,37 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather Dashboard</title>
+    <title>ClimaView Dashboard</title>
     <meta name="description" content="A modern, responsive weather dashboard">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <!-- Phosphor Icons for modern, clean icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
+
 <body>
     <div class="background-mesh"></div>
     <div id="weather-background-effects" class="weather-background-effects"></div>
-    
+
     <main class="app-container">
         <header class="header">
             <div class="logo">
                 <i class="ph-fill ph-cloud-sun"></i>
-                <h1>Weather</h1>
+                <h1>ClimaView</h1>
             </div>
         </header>
 
         <section class="search-section" style="position: relative;">
             <form id="search-form" class="search-bar">
                 <i class="ph ph-magnifying-glass search-icon"></i>
-                <input 
-                    type="text" 
-                    id="city-input" 
-                    placeholder="Search for a city..." 
-                    autocomplete="off"
-                    aria-label="City name"
-                >
+                <input type="text" id="city-input" placeholder="Search for a city..." autocomplete="off"
+                    aria-label="City name">
                 <button type="submit" class="search-btn">Search</button>
             </form>
             <ul id="search-suggestions" class="suggestions-list"></ul>
@@ -114,7 +112,7 @@
                         </div>
                         <span class="extreme-temp hot-temp" id="highest-temp">--°</span>
                     </div>
-                    
+
                     <div class="extreme-card">
                         <div class="extreme-icon-wrapper cold">
                             <i class="ph-fill ph-snowflake"></i>
@@ -140,4 +138,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>

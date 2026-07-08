@@ -95,19 +95,44 @@ body {
     position: relative;
 }
 
-/* Background Mesh Gradient */
-.background-mesh {
-    position: fixed;
+.background {
+    position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     z-index: -1;
-    background: radial-gradient(at 20% 30%, var(--mesh-color-1) 0px, transparent 50%),
-                radial-gradient(at 80% 70%, var(--mesh-color-2) 0px, transparent 50%);
+    overflow: hidden;
+}
+
+.blob {
+    position: absolute;
+    border-radius: 50%;
     filter: blur(80px);
-    opacity: 0.8;
-    transition: background 0.8s ease;
+    opacity: 0.6;
+    animation: float 10s infinite ease-in-out alternate;
+}
+
+.blob-1 {
+    top: -10%;
+    left: -10%;
+    width: 40vw;
+    height: 40vw;
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+}
+
+.blob-2 {
+    bottom: -10%;
+    right: -10%;
+    width: 35vw;
+    height: 35vw;
+    background: linear-gradient(135deg, #ec4899, #8b5cf6);
+    animation-delay: -5s;
+}
+
+@keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(50px, 50px) scale(1.1); }
 }
 
 /* =========================================
